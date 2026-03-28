@@ -1,3 +1,4 @@
+import * as THREE from 'https://unpkg.com/three@0.164.1/build/three.module.js';
 import { createPlayer } from './player.js';
 
 export function createGame({
@@ -17,6 +18,15 @@ export function createGame({
     speed: 20,
     elapsedTime: 0,
     previousTime: 0,
+  };
+
+  const cameraRig = {
+    baseOffset: new THREE.Vector3(0, 5, 10),
+    targetPosition: new THREE.Vector3(),
+    smoothSpeed: 8,
+    jumpFollowScale: 0.5,
+    speedTiltScale: 0.01,
+    maxForwardTilt: 0.08,
   };
 
   const recycleForwardMovingSegment = (segment, totalLength) => {
@@ -55,10 +65,24 @@ export function createGame({
 
     player.update(delta, state);
 
-    camera.position.x = 0;
-    camera.position.y = 5;
-    camera.position.z = 10;
-    camera.lookAt(player.mesh.position.x, player.mesh.position.y + 1, player.mesh.position.z - 8);
+    const jumpOffset = player.getJumpOffset();
+    cameraRig.targetPosition.set(
+      player.mesh.position.x + cameraRig.baseOffset.x,
+      cameraRig.baseOffset.y + jumpOffset * cameraRig.jumpFollowScale,
+      cameraRig.baseOffset.z,
+    );
+
+    const lerpAlpha = Math.min(delta * cameraRig.smoothSpeed, 1);
+    camera.position.lerp(cameraRig.targetPosition, lerpAlpha);
+
+    const forwardTilt = Math.min(state.speed * cameraRig.speedTiltScale, cameraRig.maxForwardTilt);
+    const lookTarget = new THREE.Vector3(
+      player.mesh.position.x,
+      player.mesh.position.y + 1 + jumpOffset * 0.15,
+      player.mesh.position.z - 8,
+    );
+    camera.lookAt(lookTarget);
+    camera.rotation.x += forwardTilt;
 
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
@@ -76,6 +100,7 @@ export function createGame({
     },
     stop: () => {
       state.running = false;
+      player.dispose();
     },
   };
 }
