@@ -24,10 +24,48 @@
         width: 100vw;
         height: 100vh;
       }
+
+      #ui-layer {
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        align-items: start;
+        z-index: 10;
+      }
+
+      #score-board {
+        justify-self: center;
+        margin-top: 16px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        color: #f8fafc;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        min-width: 120px;
+        text-align: center;
+      }
+
+      #start-prompt {
+        justify-self: center;
+        align-self: center;
+        color: #ffffff;
+        font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+        letter-spacing: 0.04em;
+        text-shadow: 0 6px 20px rgba(15, 23, 42, 0.8);
+        transition: opacity 180ms ease;
+      }
     </style>
   </head>
   <body>
     <div id="app"></div>
+    <div id="ui-layer" aria-live="polite">
+      <div id="score-board">Score: <span id="score">0</span></div>
+      <div id="start-prompt">Press Space to Start</div>
+    </div>
     <script type="module" src="./main.js"></script>
   </body>
 </html>
