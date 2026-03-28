@@ -25,20 +25,42 @@ export function createScene(container) {
   directionalLight.position.set(5, 10, 7);
   scene.add(directionalLight);
 
-  const groundGeometry = new THREE.PlaneGeometry(20, 200, 1, 1);
-  const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2f855a });
-  const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.set(0, 0, -80);
-  scene.add(ground);
+  const roadSegmentLength = 60;
+  const roadSegmentCount = 6;
+  const roadSegments = [];
+
+  const roadGeometry = new THREE.PlaneGeometry(10, roadSegmentLength, 1, 1);
+  const roadMaterial = new THREE.MeshStandardMaterial({ color: 0x2f2f2f });
+
+  const grassGeometry = new THREE.PlaneGeometry(20, roadSegmentLength, 1, 1);
+  const grassMaterial = new THREE.MeshStandardMaterial({ color: 0x2f855a });
+
+  for (let i = 0; i < roadSegmentCount; i += 1) {
+    const segmentGroup = new THREE.Group();
+    segmentGroup.position.z = -(i * roadSegmentLength);
+
+    const grass = new THREE.Mesh(grassGeometry, grassMaterial);
+    grass.rotation.x = -Math.PI / 2;
+    grass.position.y = -0.001;
+    segmentGroup.add(grass);
+
+    const road = new THREE.Mesh(roadGeometry, roadMaterial);
+    road.rotation.x = -Math.PI / 2;
+    segmentGroup.add(road);
+
+    scene.add(segmentGroup);
+    roadSegments.push(segmentGroup);
+  }
 
   const laneLineMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-  const laneLineGeometry = new THREE.BoxGeometry(0.2, 0.02, 4);
+  const laneLineGeometry = new THREE.BoxGeometry(0.25, 0.04, 6);
   const laneLines = [];
+  const laneSpacing = 12;
+  const laneLineCount = 30;
 
-  for (let i = 0; i < 20; i += 1) {
+  for (let i = 0; i < laneLineCount; i += 1) {
     const laneLine = new THREE.Mesh(laneLineGeometry, laneLineMaterial);
-    laneLine.position.set(0, 0.01, -i * 8);
+    laneLine.position.set(0, 0.03, -i * laneSpacing);
     scene.add(laneLine);
     laneLines.push(laneLine);
   }
@@ -56,8 +78,10 @@ export function createScene(container) {
     scene,
     camera,
     renderer,
-    ground,
+    roadSegments,
+    roadSegmentLength,
     laneLines,
+    laneSpacing,
     dispose: () => window.removeEventListener('resize', handleResize),
   };
 }

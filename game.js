@@ -1,6 +1,14 @@
 import { createPlayer } from './player.js';
 
-export function createGame({ scene, camera, renderer, ground, laneLines }) {
+export function createGame({
+  scene,
+  camera,
+  renderer,
+  roadSegments,
+  roadSegmentLength,
+  laneLines,
+  laneSpacing,
+}) {
   const player = createPlayer();
   scene.add(player.mesh);
 
@@ -11,9 +19,9 @@ export function createGame({ scene, camera, renderer, ground, laneLines }) {
     previousTime: 0,
   };
 
-  const resetTrackSegment = (segment) => {
-    if (segment.position.z > 10) {
-      segment.position.z -= 160;
+  const recycleForwardMovingSegment = (segment, totalLength) => {
+    if (segment.position.z > roadSegmentLength) {
+      segment.position.z -= totalLength;
     }
   };
 
@@ -27,15 +35,22 @@ export function createGame({ scene, camera, renderer, ground, laneLines }) {
     state.previousTime = seconds;
     state.elapsedTime += delta;
 
-    // Move visual track elements toward camera to simulate forward motion.
-    ground.position.z += state.speed * delta;
-    if (ground.position.z > 20) {
-      ground.position.z = -80;
-    }
+    const travelDistance = state.speed * delta;
+    const totalRoadLength = roadSegments.length * roadSegmentLength;
+    const totalLaneLength = laneLines.length * laneSpacing;
 
+    // Move repeated road segments toward the camera for an infinite-runner effect.
+    roadSegments.forEach((segment) => {
+      segment.position.z += travelDistance;
+      recycleForwardMovingSegment(segment, totalRoadLength);
+    });
+
+    // Move dashed lane markers backward continuously with seamless looping.
     laneLines.forEach((line) => {
-      line.position.z += state.speed * delta;
-      resetTrackSegment(line);
+      line.position.z += travelDistance;
+      if (line.position.z > laneSpacing) {
+        line.position.z -= totalLaneLength;
+      }
     });
 
     player.update(delta, state);
